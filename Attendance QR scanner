@@ -4,8 +4,6 @@
  */
 package attendacemonitoringsystem;
 
-
-import com.barcodelib.barcode.a.a.a.a;
 import com.github.sarxos.webcam.Webcam;
 import com.github.sarxos.webcam.WebcamPanel;
 import com.github.sarxos.webcam.WebcamResolution;
@@ -16,7 +14,6 @@ import com.google.zxing.NotFoundException;
 import com.google.zxing.Result;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.common.HybridBinarizer;
-import com.mysql.cj.protocol.Resultset;
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.sql.Connection;
@@ -115,7 +112,6 @@ public class qr_scanner extends javax.swing.JFrame implements Runnable, ThreadFa
         btn_login = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         attendance_table = new javax.swing.JTable();
-        btn_logout = new javax.swing.JButton();
         jLabel2 = new javax.swing.JLabel();
         tf_lrn = new javax.swing.JTextField();
         jLabel3 = new javax.swing.JLabel();
@@ -159,9 +155,6 @@ public class qr_scanner extends javax.swing.JFrame implements Runnable, ThreadFa
 
         jPanel1.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 470, 660, 320));
 
-        btn_logout.setText("Logout");
-        jPanel1.add(btn_logout, new org.netbeans.lib.awtextra.AbsoluteConstraints(530, 330, -1, -1));
-
         jLabel2.setText("Name:");
         jPanel1.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 350, -1, -1));
         jPanel1.add(tf_lrn, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 320, 310, 30));
@@ -191,52 +184,15 @@ public class qr_scanner extends javax.swing.JFrame implements Runnable, ThreadFa
     }// </editor-fold>                        
 
     private void btn_clearActionPerformed(java.awt.event.ActionEvent evt) {                                          
-        // Clear LRN
+        // Clear operations
         tf_name.setText("");
         tf_lrn.setText("");
+        cb_CourseAndYear.setSelectedItem("BSIT1");
     }                                         
 
     @SuppressWarnings("empty-statement")
     private void btn_loginActionPerformed(java.awt.event.ActionEvent evt) {                                          
-         // Login
-    try {
-        long lrn = Long.parseLong(tf_lrn.getText());
-        String name = tf_name.getText();
-        String course_and_year = (String) cb_CourseAndYear.getSelectedItem();
-        String Selected_Course_Year = course_and_year;
-        String tablename = "";
-
-        if (Selected_Course_Year.equals("BSIT1"))
-            tablename = "etd_bsit1-students";
-        else if (Selected_Course_Year.equals("BSIT2"))
-            tablename = "etd_bsit2-students";
-        else if (Selected_Course_Year.equals("BSIT3"))
-            tablename = "etd_bsit3-students";
-        else if (Selected_Course_Year.equals("BSIT4"))
-            tablename = "etd_bsit4-students";
-        else;
-
-        pst = (PreparedStatement) con.prepareStatement("INSERT INTO `" + tablename + "` (LRN, Name, CourseAndYear) VALUES (?, ?, ?)");
-        pst.setLong(1, lrn);
-        pst.setString(2, name);
-        pst.setString(3, course_and_year);
-
-        int k = pst.executeUpdate();
-
-        if (k == 1) {
-            con.commit(); // Commit the changes to the database
-            JOptionPane.showMessageDialog(this, "Record has been Added Successfully");
-            tf_lrn.setText("");
-            tf_name.setText("");
-        } else {
-            JOptionPane.showMessageDialog(this, "Record Failed");
-        }
-    } catch (SQLException ex) {
-        // Handle the exception appropriately
-        ex.printStackTrace(); // Print the exception details for debugging
-    } catch (NumberFormatException ex) {
-        JOptionPane.showMessageDialog(this, "Invalid LRN format");
-    }
+    
     }                                         
 
      private void initWebcam() {
@@ -281,7 +237,7 @@ public class qr_scanner extends javax.swing.JFrame implements Runnable, ThreadFa
 
         if (result != null) {
             if (tf_lrn.getText().isEmpty()) {
-                // Only process the QR code if tf_lrn is empty
+                // Only process the QR code if LRN textfield is empty
                 tf_lrn.setText(result.getText());
                 String qrCodeText = result.getText();
                 PKeyInDatabase(qrCodeText);
@@ -304,6 +260,7 @@ private String prevQRCode = "";
 
 private boolean PKeyInDatabase(String qrCodeText) {
     try {
+        // Check if the qrcode matches any primary key from u"bsit_students" table
         String sql = "SELECT * FROM bsit_students WHERE LRN = ?";
         pst = con.prepareStatement(sql);
         pst.setString(1, qrCodeText);
@@ -318,12 +275,12 @@ private boolean PKeyInDatabase(String qrCodeText) {
             tf_name.setText(name);
             cb_CourseAndYear.setSelectedItem(courseAndYear);
 
-            // Get the current time
+            // Get the current time 12 hours format
             java.sql.Time time = new java.sql.Time(System.currentTimeMillis());
-            SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss a", Locale.ENGLISH);
+            SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss a", Locale.ENGLISH); // "a" is use to set AM or PM
             String formattedTime = sdf.format(time);
 
-            // Determine the table name based on the "Course and Year" attribute
+            // Determine the table name based on the "Course and Year" column
             String tableName = "etd_" + courseAndYear.toLowerCase() + "-students";
 
             // Check if the QR code exists in the "login" table
@@ -339,7 +296,7 @@ private boolean PKeyInDatabase(String qrCodeText) {
                 String loginPMTime = loginRs.getString("Login PM");
                 String logoutPMTime = loginRs.getString("Logout PM");
 
-                // Check if the current QR code's primary key is different from the previous one
+                // Check if the previous qrcode is the same on the current qrcode
                 if (!currQRCode.equals(prevQRCode)) {
                     scanCount = 0;
                     loginAM = false;
@@ -389,7 +346,7 @@ private boolean PKeyInDatabase(String qrCodeText) {
                 // Update the previous QR code primary key
                 prevQRCode = currQRCode;
 
-                // Update the "etd_" table
+                // Update the table base on Course and Year
                 String update = null;
 
                 if (loginAM) {
@@ -401,14 +358,13 @@ private boolean PKeyInDatabase(String qrCodeText) {
                 } else if (logoutPM) {
                     update = "UPDATE `" + tableName + "` SET `Logout PM` = ? WHERE LRN = ?";
                 }
-
+                
                 if (update != null) {
                     pst = con.prepareStatement(update);
                     pst.setString(1, formattedTime);
                     pst.setString(2, qrCodeText);
                     pst.executeUpdate();
                 }
-
                 Fetch();
             } else {
                 // Retrieving Data from bsit-students
@@ -416,7 +372,7 @@ private boolean PKeyInDatabase(String qrCodeText) {
                                 "(LRN, Name, CourseAndYear, `Login AM`, `Logout AM`, `Login PM`, `Logout PM`) " +
                                 "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-                // Set initial time values based on the flags
+                // Set Time Flags
                 String loginAMTime = loginAM ? formattedTime : "00:00:00 AM";
                 String logoutAMTime = logoutAM ? formattedTime : "00:00:00 AM";
                 String loginPMTime = loginPM ? formattedTime : "00:00:00 PM";
@@ -460,7 +416,6 @@ private boolean PKeyInDatabase(String qrCodeText) {
     private javax.swing.JTable attendance_table;
     private javax.swing.JButton btn_clear;
     private javax.swing.JButton btn_login;
-    private javax.swing.JButton btn_logout;
     private javax.swing.JComboBox<String> cb_CourseAndYear;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
