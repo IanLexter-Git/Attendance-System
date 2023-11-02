@@ -1,0 +1,484 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
+ */
+package attendacemonitoringsystem;
+
+
+import com.barcodelib.barcode.a.a.a.a;
+import com.github.sarxos.webcam.Webcam;
+import com.github.sarxos.webcam.WebcamPanel;
+import com.github.sarxos.webcam.WebcamResolution;
+import com.google.zxing.BinaryBitmap;
+import com.google.zxing.LuminanceSource;
+import com.google.zxing.MultiFormatReader;
+import com.google.zxing.NotFoundException;
+import com.google.zxing.Result;
+import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
+import com.google.zxing.common.HybridBinarizer;
+import com.mysql.cj.protocol.Resultset;
+import java.awt.Dimension;
+import java.awt.image.BufferedImage;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
+import java.sql.*;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
+import java.util.Vector;
+import javax.swing.table.DefaultTableModel;
+
+
+/**
+ *
+ * @author User
+ */
+public class qr_scanner extends javax.swing.JFrame implements Runnable, ThreadFactory {
+
+    private WebcamPanel panel = null;
+    private Webcam webcam = null;
+    private Executor executor = Executors.newSingleThreadExecutor(this);
+
+    public qr_scanner() throws SQLException {
+        initComponents();
+        initWebcam();
+        Connect();
+        Fetch();
+   
+    }
+    Connection con;
+    PreparedStatement pst;
+    ResultSet rs;
+
+    public void Connect() throws SQLException {
+        con = DriverManager.getConnection("jdbc:mysql://localhost/attendance_monitoring", "root",  "");
+        con.setAutoCommit(false);
+        System.out.println("Connected to the database");
+        
+    }
+      public static void main(String args[])  {
+        try {
+            qr_scanner scanner = new qr_scanner();
+            scanner.Connect();
+            java.awt.EventQueue.invokeLater(() -> {
+                scanner.setVisible(true);
+            });
+        } catch (SQLException ex) {
+            Logger.getLogger(qr_scanner.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+      private void Fetch() {
+          try {
+          int q;
+            pst = con.prepareStatement("SELECT * FROM `login`");
+            rs = pst.executeQuery();
+            ResultSetMetaData rss = rs.getMetaData();
+            q = rss.getColumnCount();
+            
+            DefaultTableModel df = (DefaultTableModel)attendance_table.getModel();
+            df.setRowCount(0);
+            while(rs.next()) {
+                Vector v2 = new Vector();
+                for(int a=1; a<=q; a++){
+                    v2.add(rs.getString("Name"));
+                    v2.add(rs.getString("CourseAndYear"));
+                    v2.add(rs.getString("Login AM"));
+                    v2.add(rs.getString("Logout AM"));
+                    v2.add(rs.getString("Login PM"));
+                    v2.add(rs.getString("Logout PM"));
+            }
+                df.addRow(v2);
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(qr_scanner.class.getName()).log(Level.SEVERE, null, ex);
+        }
+         
+      }
+    @SuppressWarnings("unchecked")
+    
+
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">                          
+    private void initComponents() {
+
+        jPanel1 = new javax.swing.JPanel();
+        jPanel2 = new javax.swing.JPanel();
+        tf_name = new javax.swing.JTextField();
+        btn_clear = new javax.swing.JButton();
+        btn_login = new javax.swing.JButton();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        attendance_table = new javax.swing.JTable();
+        btn_logout = new javax.swing.JButton();
+        jLabel2 = new javax.swing.JLabel();
+        tf_lrn = new javax.swing.JTextField();
+        jLabel3 = new javax.swing.JLabel();
+        jLabel4 = new javax.swing.JLabel();
+        cb_CourseAndYear = new javax.swing.JComboBox<>();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        jPanel2.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+        jPanel2.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 10, 420, 280));
+        jPanel1.add(tf_name, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 370, 310, 30));
+
+        btn_clear.setText("Clear");
+        btn_clear.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btn_clearActionPerformed(evt);
+            }
+        });
+        jPanel1.add(btn_clear, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 330, -1, -1));
+
+        btn_login.setText("Login");
+        btn_login.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btn_loginActionPerformed(evt);
+            }
+        });
+        jPanel1.add(btn_login, new org.netbeans.lib.awtextra.AbsoluteConstraints(450, 330, -1, -1));
+
+        attendance_table.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "Name", "Course & Year", "Log In- AM", "Log Out- AM", "Log In- PM", "Log Out - Pm"
+            }
+        ));
+        jScrollPane1.setViewportView(attendance_table);
+
+        jPanel1.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 470, 660, 320));
+
+        btn_logout.setText("Logout");
+        jPanel1.add(btn_logout, new org.netbeans.lib.awtextra.AbsoluteConstraints(530, 330, -1, -1));
+
+        jLabel2.setText("Name:");
+        jPanel1.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 350, -1, -1));
+        jPanel1.add(tf_lrn, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 320, 310, 30));
+
+        jLabel3.setText("LRN:");
+        jPanel1.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 300, -1, -1));
+
+        jLabel4.setText("Course and Year:");
+        jPanel1.add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 410, -1, -1));
+
+        cb_CourseAndYear.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "BSIT1", "BSIT2", "BSIT3", "BSIT4", " " }));
+        jPanel1.add(cb_CourseAndYear, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 430, 90, -1));
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 732, Short.MAX_VALUE)
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 793, Short.MAX_VALUE)
+        );
+
+        pack();
+        setLocationRelativeTo(null);
+    }// </editor-fold>                        
+
+    private void btn_clearActionPerformed(java.awt.event.ActionEvent evt) {                                          
+        // Clear LRN
+        tf_name.setText("");
+        tf_lrn.setText("");
+    }                                         
+
+    @SuppressWarnings("empty-statement")
+    private void btn_loginActionPerformed(java.awt.event.ActionEvent evt) {                                          
+         // Login
+    try {
+        long lrn = Long.parseLong(tf_lrn.getText());
+        String name = tf_name.getText();
+        String course_and_year = (String) cb_CourseAndYear.getSelectedItem();
+        String Selected_Course_Year = course_and_year;
+        String tablename = "";
+
+        if (Selected_Course_Year.equals("BSIT1"))
+            tablename = "etd_bsit1-students";
+        else if (Selected_Course_Year.equals("BSIT2"))
+            tablename = "etd_bsit2-students";
+        else if (Selected_Course_Year.equals("BSIT3"))
+            tablename = "etd_bsit3-students";
+        else if (Selected_Course_Year.equals("BSIT4"))
+            tablename = "etd_bsit4-students";
+        else;
+
+        pst = (PreparedStatement) con.prepareStatement("INSERT INTO `" + tablename + "` (LRN, Name, CourseAndYear) VALUES (?, ?, ?)");
+        pst.setLong(1, lrn);
+        pst.setString(2, name);
+        pst.setString(3, course_and_year);
+
+        int k = pst.executeUpdate();
+
+        if (k == 1) {
+            con.commit(); // Commit the changes to the database
+            JOptionPane.showMessageDialog(this, "Record has been Added Successfully");
+            tf_lrn.setText("");
+            tf_name.setText("");
+        } else {
+            JOptionPane.showMessageDialog(this, "Record Failed");
+        }
+    } catch (SQLException ex) {
+        // Handle the exception appropriately
+        ex.printStackTrace(); // Print the exception details for debugging
+    } catch (NumberFormatException ex) {
+        JOptionPane.showMessageDialog(this, "Invalid LRN format");
+    }
+    }                                         
+
+     private void initWebcam() {
+
+        Dimension size = WebcamResolution.QVGA.getSize();
+        webcam = Webcam.getWebcams().get(0);
+        webcam.setViewSize(size);
+
+        panel = new WebcamPanel(webcam);
+        panel.setPreferredSize(size);
+        panel.setFPSDisplayed(true);
+
+        jPanel2.add(panel, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 470, 350));
+        executor.execute(this);
+    }
+    
+    @Override
+   public void run() {
+    do {
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException ex) {
+            java.util.logging.Logger.getLogger(qr_scanner.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+
+        Result result = null;
+        BufferedImage image = null;
+
+        if (webcam.isOpen()) {
+            if ((image = webcam.getImage()) == null) {
+                continue;
+            }
+        }
+        LuminanceSource source = new BufferedImageLuminanceSource(image);
+        BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
+
+        try {
+            result = new MultiFormatReader().decode(bitmap);
+        } catch (NotFoundException ex) {
+            java.util.logging.Logger.getLogger(qr_scanner.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+        }
+
+        if (result != null) {
+            if (tf_lrn.getText().isEmpty()) {
+                // Only process the QR code if tf_lrn is empty
+                tf_lrn.setText(result.getText());
+                String qrCodeText = result.getText();
+                PKeyInDatabase(qrCodeText);
+            }
+        }
+    } while (true);
+}
+    @Override
+    public Thread newThread(Runnable r) {
+        Thread t = new Thread(r, "My Thread");
+        t.setDaemon(true);
+        return t;
+    }
+private int scanCount = 0;
+private boolean loginAM = true;
+private boolean logoutAM = false;
+private boolean loginPM = false;
+private boolean logoutPM = false;
+private String prevQRCode = "";
+
+private boolean PKeyInDatabase(String qrCodeText) {
+    try {
+        String sql = "SELECT * FROM bsit_students WHERE LRN = ?";
+        pst = con.prepareStatement(sql);
+        pst.setString(1, qrCodeText);
+        ResultSet rs = pst.executeQuery();
+
+        if (rs.next()) {
+            long lrn = rs.getLong(1);
+            String name = rs.getString(2);
+            String courseAndYear = rs.getString(3);
+
+            tf_lrn.setText(String.valueOf(lrn));
+            tf_name.setText(name);
+            cb_CourseAndYear.setSelectedItem(courseAndYear);
+
+            // Get the current time
+            java.sql.Time time = new java.sql.Time(System.currentTimeMillis());
+            SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss a", Locale.ENGLISH);
+            String formattedTime = sdf.format(time);
+
+            // Determine the table name based on the "Course and Year" attribute
+            String tableName = "etd_" + courseAndYear.toLowerCase() + "-students";
+
+            // Check if the QR code exists in the "login" table
+            String checkLoginSql = "SELECT * FROM `login` WHERE LRN = ?";
+            pst = con.prepareStatement(checkLoginSql);
+            pst.setString(1, qrCodeText);
+            ResultSet loginRs = pst.executeQuery();
+
+            if (loginRs.next()) {
+                String currQRCode = loginRs.getString(1);
+                String loginAMTime = loginRs.getString("Login AM");
+                String logoutAMTime = loginRs.getString("Logout AM");
+                String loginPMTime = loginRs.getString("Login PM");
+                String logoutPMTime = loginRs.getString("Logout PM");
+
+                // Check if the current QR code's primary key is different from the previous one
+                if (!currQRCode.equals(prevQRCode)) {
+                    scanCount = 0;
+                    loginAM = false;
+                    logoutAM = false;
+                    loginPM = false;
+                    logoutPM = false;
+
+                    if ("00:00:00 AM".equals(loginAMTime)) {
+                        loginAM = true;
+                    } else if ("00:00:00 AM".equals(logoutAMTime)) {
+                        logoutAM = true;
+                    } else if ("00:00:00 PM".equals(loginPMTime)) {
+                        loginPM = true;
+                    } else if ("00:00:00 PM".equals(logoutPMTime)) {
+                        logoutPM = true;
+                    }
+                } else {
+                    // Increment scanCount and update flags for the same QR code
+                    scanCount = (scanCount + 1) % 4;
+
+                    loginAM = (scanCount == 0);
+                    logoutAM = (scanCount == 1);
+                    loginPM = (scanCount == 2);
+                    logoutPM = (scanCount == 3);
+                }
+
+                // Update the "login" table
+                String updateLogin = null;
+
+                if (loginAM) {
+                    updateLogin = "UPDATE `login` SET `Login AM` = ? WHERE LRN = ?";
+                } else if (logoutAM) {
+                    updateLogin = "UPDATE `login` SET `Logout AM` = ? WHERE LRN = ?";
+                } else if (loginPM) {
+                    updateLogin = "UPDATE `login` SET `Login PM` = ? WHERE LRN = ?";
+                } else if (logoutPM) {
+                    updateLogin = "UPDATE `login` SET `Logout PM` = ? WHERE LRN = ?";
+                }
+
+                if (updateLogin != null) {
+                    pst = con.prepareStatement(updateLogin);
+                    pst.setString(1, formattedTime);
+                    pst.setString(2, qrCodeText);
+                    pst.executeUpdate();
+                }
+
+                // Update the previous QR code primary key
+                prevQRCode = currQRCode;
+
+                // Update the "etd_" table
+                String update = null;
+
+                if (loginAM) {
+                    update = "UPDATE `" + tableName + "` SET `Login AM` = ? WHERE LRN = ?";
+                } else if (logoutAM) {
+                    update = "UPDATE `" + tableName + "` SET `Logout AM` = ? WHERE LRN = ?";
+                } else if (loginPM) {
+                    update = "UPDATE `" + tableName + "` SET `Login PM` = ? WHERE LRN = ?";
+                } else if (logoutPM) {
+                    update = "UPDATE `" + tableName + "` SET `Logout PM` = ? WHERE LRN = ?";
+                }
+
+                if (update != null) {
+                    pst = con.prepareStatement(update);
+                    pst.setString(1, formattedTime);
+                    pst.setString(2, qrCodeText);
+                    pst.executeUpdate();
+                }
+
+                Fetch();
+            } else {
+                // Retrieving Data from bsit-students
+                String insert = "INSERT INTO `" + tableName + "` " +
+                                "(LRN, Name, CourseAndYear, `Login AM`, `Logout AM`, `Login PM`, `Logout PM`) " +
+                                "VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+                // Set initial time values based on the flags
+                String loginAMTime = loginAM ? formattedTime : "00:00:00 AM";
+                String logoutAMTime = logoutAM ? formattedTime : "00:00:00 AM";
+                String loginPMTime = loginPM ? formattedTime : "00:00:00 PM";
+                String logoutPMTime = logoutPM ? formattedTime : "00:00:00 PM";
+
+                pst = con.prepareStatement(insert);
+                pst.setString(1, qrCodeText);
+                pst.setString(2, name);
+                pst.setString(3, courseAndYear);
+                pst.setString(4, loginAMTime);
+                pst.setString(5, logoutAMTime);
+                pst.setString(6, loginPMTime);
+                pst.setString(7, logoutPMTime);
+                pst.executeUpdate();
+
+                // Insert data into the "login" table
+                String insertLogin = "INSERT INTO `login` " +
+                                    "(LRN, Name, CourseAndYear, `Login AM`, `Logout AM`, `Login PM`, `Logout PM`) " +
+                                    "VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+                pst = con.prepareStatement(insertLogin);
+                pst.setString(1, qrCodeText);
+                pst.setString(2, name);
+                pst.setString(3, courseAndYear);
+                pst.setString(4, loginAMTime);
+                pst.setString(5, logoutAMTime);
+                pst.setString(6, loginPMTime);
+                pst.setString(7, logoutPMTime);
+                pst.executeUpdate();
+
+                Fetch();
+            }
+            con.commit();
+        }
+    } catch (SQLException ex) {
+        ex.printStackTrace();
+    }
+    return false;
+}
+    // Variables declaration - do not modify                     
+    private javax.swing.JTable attendance_table;
+    private javax.swing.JButton btn_clear;
+    private javax.swing.JButton btn_login;
+    private javax.swing.JButton btn_logout;
+    private javax.swing.JComboBox<String> cb_CourseAndYear;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTextField tf_lrn;
+    private javax.swing.JTextField tf_name;
+    // End of variables declaration                   
+
+
+    private static class setVisible {
+
+        public setVisible(boolean b) {
+        }
+    }
+
+}
+
+
