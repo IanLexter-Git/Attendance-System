@@ -15,6 +15,8 @@ import com.google.zxing.Result;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.common.HybridBinarizer;
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -31,6 +33,13 @@ import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.Vector;
 import javax.swing.table.DefaultTableModel;
+import java.util.Date;
+import javax.swing.Action;
+import javax.swing.JLabel;
+import javax.swing.Timer;
+import java.util.TimerTask;
+import javax.swing.RowFilter;
+import javax.swing.table.TableRowSorter;
 
 
 /**
@@ -48,12 +57,37 @@ public class qr_scanner extends javax.swing.JFrame implements Runnable, ThreadFa
         initWebcam();
         Connect();
         Fetch();
+        dt();
+        times();
+        
    
     }
     Connection con;
     PreparedStatement pst;
     ResultSet rs;
-
+    
+    public void dt() {
+        //set Date
+         Date d = new Date();
+         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+         String newDate = sdf.format(d);
+         Date.setText(newDate);
+    }
+SimpleDateFormat st;
+    public void times() {
+            // set Time
+            new Timer(0,new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+            Date dt = new Date();
+            st = new SimpleDateFormat("hh:mm:ss a");
+            
+            String time = st.format(dt);
+            Time.setText(time);
+            }
+        }  ).start();
+    }
     public void Connect() throws SQLException {
         con = DriverManager.getConnection("jdbc:mysql://localhost/attendance_monitoring", "root",  "");
         con.setAutoCommit(false);
@@ -87,6 +121,7 @@ public class qr_scanner extends javax.swing.JFrame implements Runnable, ThreadFa
                 for(int a=1; a<=q; a++){
                     v2.add(rs.getString("Name"));
                     v2.add(rs.getString("CourseAndYear"));
+                    v2.add(rs.getString("Date"));
                     v2.add(rs.getString("Login AM"));
                     v2.add(rs.getString("Logout AM"));
                     v2.add(rs.getString("Login PM"));
@@ -117,6 +152,14 @@ public class qr_scanner extends javax.swing.JFrame implements Runnable, ThreadFa
         jLabel3 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
         cb_CourseAndYear = new javax.swing.JComboBox<>();
+        jLabel1 = new javax.swing.JLabel();
+        total_students = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
+        jLabel6 = new javax.swing.JLabel();
+        Date = new javax.swing.JLabel();
+        Time = new javax.swing.JLabel();
+        jLabel7 = new javax.swing.JLabel();
+        tf_search = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -143,17 +186,37 @@ public class qr_scanner extends javax.swing.JFrame implements Runnable, ThreadFa
         });
         jPanel1.add(btn_login, new org.netbeans.lib.awtextra.AbsoluteConstraints(450, 330, -1, -1));
 
+        attendance_table.setFont(new java.awt.Font("Segoe UI Emoji", 0, 12)); // NOI18N
         attendance_table.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
             },
             new String [] {
-                "Name", "Course & Year", "Log In- AM", "Log Out- AM", "Log In- PM", "Log Out - Pm"
+                "Name", "Course & Year", "Date", "Login AM", "Logout AM", "Login PM", "Logout Pm"
             }
-        ));
-        jScrollPane1.setViewportView(attendance_table);
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false, false, false, false, false
+            };
 
-        jPanel1.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 470, 660, 320));
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        attendance_table.setRowHeight(35);
+        attendance_table.setRowMargin(20);
+        jScrollPane1.setViewportView(attendance_table);
+        if (attendance_table.getColumnModel().getColumnCount() > 0) {
+            attendance_table.getColumnModel().getColumn(0).setPreferredWidth(150);
+            attendance_table.getColumnModel().getColumn(1).setPreferredWidth(100);
+            attendance_table.getColumnModel().getColumn(2).setPreferredWidth(80);
+            attendance_table.getColumnModel().getColumn(3).setPreferredWidth(100);
+            attendance_table.getColumnModel().getColumn(4).setPreferredWidth(100);
+            attendance_table.getColumnModel().getColumn(5).setPreferredWidth(100);
+            attendance_table.getColumnModel().getColumn(6).setPreferredWidth(100);
+        }
+
+        jPanel1.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 470, 680, 320));
 
         jLabel2.setText("Name:");
         jPanel1.add(jLabel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 350, -1, -1));
@@ -167,6 +230,40 @@ public class qr_scanner extends javax.swing.JFrame implements Runnable, ThreadFa
 
         cb_CourseAndYear.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "BSIT1", "BSIT2", "BSIT3", "BSIT4", " " }));
         jPanel1.add(cb_CourseAndYear, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 430, 90, -1));
+
+        jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        jLabel1.setText("Total Number of Students:");
+        jPanel1.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 370, -1, -1));
+
+        total_students.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        total_students.setText("0");
+        jPanel1.add(total_students, new org.netbeans.lib.awtextra.AbsoluteConstraints(580, 370, 30, -1));
+
+        jLabel5.setFont(new java.awt.Font("Segoe UI Black", 0, 14)); // NOI18N
+        jLabel5.setText("Date:");
+        jPanel1.add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(470, 20, -1, -1));
+
+        jLabel6.setFont(new java.awt.Font("Segoe UI Black", 0, 14)); // NOI18N
+        jLabel6.setText("Time:");
+        jPanel1.add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(470, 50, -1, -1));
+
+        Date.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        Date.setText("jLabel7");
+        jPanel1.add(Date, new org.netbeans.lib.awtextra.AbsoluteConstraints(520, 20, -1, 20));
+
+        Time.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        Time.setText("jLabel8");
+        jPanel1.add(Time, new org.netbeans.lib.awtextra.AbsoluteConstraints(520, 50, -1, 20));
+
+        jLabel7.setText("Search:");
+        jPanel1.add(jLabel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(460, 200, -1, -1));
+
+        tf_search.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                tf_searchKeyReleased(evt);
+            }
+        });
+        jPanel1.add(tf_search, new org.netbeans.lib.awtextra.AbsoluteConstraints(460, 220, 180, 30));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -190,10 +287,18 @@ public class qr_scanner extends javax.swing.JFrame implements Runnable, ThreadFa
         cb_CourseAndYear.setSelectedItem("BSIT1");
     }                                         
 
-    @SuppressWarnings("empty-statement")
+    @SuppressWarnings("empty-st atement")
     private void btn_loginActionPerformed(java.awt.event.ActionEvent evt) {                                          
     
     }                                         
+
+    private void tf_searchKeyReleased(java.awt.event.KeyEvent evt) {                                      
+    // Search Data
+    DefaultTableModel df = (DefaultTableModel) attendance_table.getModel();
+        TableRowSorter<DefaultTableModel> sort = new TableRowSorter<>(df);
+        attendance_table.setRowSorter(sort);
+        sort.setRowFilter(RowFilter.regexFilter(tf_search.getText()));
+    }                                     
 
      private void initWebcam() {
 
@@ -258,9 +363,28 @@ private boolean loginPM = false;
 private boolean logoutPM = false;
 private String prevQRCode = "";
 
+private int LoginTableRowCount() {
+    try {
+        pst = con.prepareStatement("SELECT COUNT(*) AS total_students FROM login");
+        rs = pst.executeQuery();
+        if (rs.next()) {
+            return rs.getInt("total_students");
+        }
+    } catch (SQLException ex) {
+        ex.printStackTrace();
+    }
+    return 0;
+}
+
+private void UpdateTableRowCount() {
+    int rowCount = LoginTableRowCount();
+    total_students.setText(" " + rowCount);
+}
+
 private boolean PKeyInDatabase(String qrCodeText) {
     try {
-        // Check if the qrcode matches any primary key from u"bsit_students" table
+         java.util.Timer clearTimer = new java.util.Timer();
+        // Check if the qrcode matches any primary key from "bsit_students" table
         String sql = "SELECT * FROM bsit_students WHERE LRN = ?";
         pst = con.prepareStatement(sql);
         pst.setString(1, qrCodeText);
@@ -275,15 +399,15 @@ private boolean PKeyInDatabase(String qrCodeText) {
             tf_name.setText(name);
             cb_CourseAndYear.setSelectedItem(courseAndYear);
 
-            // Get the current time 12 hours format
-            java.sql.Time time = new java.sql.Time(System.currentTimeMillis());
-            SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss a", Locale.ENGLISH); // "a" is use to set AM or PM
-            String formattedTime = sdf.format(time);
+            Date currentTime = new Date();
+            SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss a", Locale.ENGLISH);
+            String formattedTime = sdf.format(currentTime);
 
-            // Determine the table name based on the "Course and Year" column
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+            String formattedDate = dateFormat.format(currentTime);
+
             String tableName = "etd_" + courseAndYear.toLowerCase() + "-students";
 
-            // Check if the QR code exists in the "login" table
             String checkLoginSql = "SELECT * FROM `login` WHERE LRN = ?";
             pst = con.prepareStatement(checkLoginSql);
             pst.setString(1, qrCodeText);
@@ -296,7 +420,6 @@ private boolean PKeyInDatabase(String qrCodeText) {
                 String loginPMTime = loginRs.getString("Login PM");
                 String logoutPMTime = loginRs.getString("Logout PM");
 
-                // Check if the previous qrcode is the same on the current qrcode
                 if (!currQRCode.equals(prevQRCode)) {
                     scanCount = 0;
                     loginAM = false;
@@ -314,7 +437,6 @@ private boolean PKeyInDatabase(String qrCodeText) {
                         logoutPM = true;
                     }
                 } else {
-                    // Increment scanCount and update flags for the same QR code
                     scanCount = (scanCount + 1) % 4;
 
                     loginAM = (scanCount == 0);
@@ -323,56 +445,82 @@ private boolean PKeyInDatabase(String qrCodeText) {
                     logoutPM = (scanCount == 3);
                 }
 
-                // Update the "login" table
                 String updateLogin = null;
 
                 if (loginAM) {
-                    updateLogin = "UPDATE `login` SET `Login AM` = ? WHERE LRN = ?";
+                    updateLogin = "UPDATE `login` SET `Login AM` = ?, `Date` = ? WHERE LRN = ?";
                 } else if (logoutAM) {
-                    updateLogin = "UPDATE `login` SET `Logout AM` = ? WHERE LRN = ?";
+                    updateLogin = "UPDATE `login` SET `Logout AM` = ?, `Date` = ? WHERE LRN = ?";
                 } else if (loginPM) {
-                    updateLogin = "UPDATE `login` SET `Login PM` = ? WHERE LRN = ?";
+                    updateLogin = "UPDATE `login` SET `Login PM` = ?, `Date` = ? WHERE LRN = ?";
                 } else if (logoutPM) {
-                    updateLogin = "UPDATE `login` SET `Logout PM` = ? WHERE LRN = ?";
+                    updateLogin = "UPDATE `login` SET `Logout PM` = ?, `Date` = ? WHERE LRN = ?";
                 }
 
                 if (updateLogin != null) {
                     pst = con.prepareStatement(updateLogin);
                     pst.setString(1, formattedTime);
-                    pst.setString(2, qrCodeText);
+                    pst.setString(2, formattedDate);
+                    pst.setString(3, qrCodeText);
                     pst.executeUpdate();
                 }
 
-                // Update the previous QR code primary key
                 prevQRCode = currQRCode;
 
-                // Update the table base on Course and Year
                 String update = null;
 
                 if (loginAM) {
-                    update = "UPDATE `" + tableName + "` SET `Login AM` = ? WHERE LRN = ?";
+                    update = "UPDATE `" + tableName + "` SET `Login AM` = ?, `Date` = ? WHERE LRN = ?";
+                    clearTimer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        tf_lrn.setText("");
+                        tf_name.setText("");
+                    }
+                }, 2000);
                 } else if (logoutAM) {
-                    update = "UPDATE `" + tableName + "` SET `Logout AM` = ? WHERE LRN = ?";
+                    update = "UPDATE `" + tableName + "` SET `Logout AM` = ?, `Date` = ? WHERE LRN = ?";
+                    clearTimer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        tf_lrn.setText("");
+                        tf_name.setText("");
+                    }
+                }, 2000);
                 } else if (loginPM) {
-                    update = "UPDATE `" + tableName + "` SET `Login PM` = ? WHERE LRN = ?";
+                    update = "UPDATE `" + tableName + "` SET `Login PM` = ?, `Date` = ? WHERE LRN = ?";
+                    clearTimer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        tf_lrn.setText("");
+                        tf_name.setText("");
+                    }
+                }, 2000);
                 } else if (logoutPM) {
-                    update = "UPDATE `" + tableName + "` SET `Logout PM` = ? WHERE LRN = ?";
+                    update = "UPDATE `" + tableName + "` SET `Logout PM` = ?, `Date` = ? WHERE LRN = ?";
+                    clearTimer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        tf_lrn.setText("");
+                        tf_name.setText("");
+                    }
+                }, 2000);
                 }
-                
+
                 if (update != null) {
                     pst = con.prepareStatement(update);
                     pst.setString(1, formattedTime);
-                    pst.setString(2, qrCodeText);
+                    pst.setString(2, formattedDate);
+                    pst.setString(3, qrCodeText);
                     pst.executeUpdate();
                 }
+
                 Fetch();
             } else {
-                // Retrieving Data from bsit-students
                 String insert = "INSERT INTO `" + tableName + "` " +
-                                "(LRN, Name, CourseAndYear, `Login AM`, `Logout AM`, `Login PM`, `Logout PM`) " +
-                                "VALUES (?, ?, ?, ?, ?, ?, ?)";
+                        "(LRN, Name, CourseAndYear, `Date`, `Login AM`, `Logout AM`, `Login PM`, `Logout PM`) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
-                // Set Time Flags
                 String loginAMTime = loginAM ? formattedTime : "00:00:00 AM";
                 String logoutAMTime = logoutAM ? formattedTime : "00:00:00 AM";
                 String loginPMTime = loginPM ? formattedTime : "00:00:00 PM";
@@ -382,28 +530,38 @@ private boolean PKeyInDatabase(String qrCodeText) {
                 pst.setString(1, qrCodeText);
                 pst.setString(2, name);
                 pst.setString(3, courseAndYear);
-                pst.setString(4, loginAMTime);
-                pst.setString(5, logoutAMTime);
-                pst.setString(6, loginPMTime);
-                pst.setString(7, logoutPMTime);
+                pst.setString(4, formattedDate);
+                pst.setString(5, loginAMTime);
+                pst.setString(6, logoutAMTime);
+                pst.setString(7, loginPMTime);
+                pst.setString(8, logoutPMTime);
                 pst.executeUpdate();
 
-                // Insert data into the "login" table
                 String insertLogin = "INSERT INTO `login` " +
-                                    "(LRN, Name, CourseAndYear, `Login AM`, `Logout AM`, `Login PM`, `Logout PM`) " +
-                                    "VALUES (?, ?, ?, ?, ?, ?, ?)";
+                        "(LRN, Name, CourseAndYear, `Date`, `Login AM`, `Logout AM`, `Login PM`, `Logout PM`) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
                 pst = con.prepareStatement(insertLogin);
                 pst.setString(1, qrCodeText);
                 pst.setString(2, name);
                 pst.setString(3, courseAndYear);
-                pst.setString(4, loginAMTime);
-                pst.setString(5, logoutAMTime);
-                pst.setString(6, loginPMTime);
-                pst.setString(7, logoutPMTime);
+                pst.setString(4, formattedDate);
+                pst.setString(5, loginAMTime);
+                pst.setString(6, logoutAMTime);
+                pst.setString(7, loginPMTime);
+                pst.setString(8, logoutPMTime);
                 pst.executeUpdate();
-
                 Fetch();
+                UpdateTableRowCount();
+
+                // Schedule a clearTimer to clear text fields after a 2-second delay
+                clearTimer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        tf_lrn.setText("");
+                        tf_name.setText("");
+                    }
+                }, 2000);
             }
             con.commit();
         }
@@ -412,19 +570,28 @@ private boolean PKeyInDatabase(String qrCodeText) {
     }
     return false;
 }
+
     // Variables declaration - do not modify                     
+    private javax.swing.JLabel Date;
+    private javax.swing.JLabel Time;
     private javax.swing.JTable attendance_table;
     private javax.swing.JButton btn_clear;
     private javax.swing.JButton btn_login;
     private javax.swing.JComboBox<String> cb_CourseAndYear;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextField tf_lrn;
     private javax.swing.JTextField tf_name;
+    private javax.swing.JTextField tf_search;
+    private javax.swing.JLabel total_students;
     // End of variables declaration                   
 
 
@@ -435,5 +602,3 @@ private boolean PKeyInDatabase(String qrCodeText) {
     }
 
 }
-
-
